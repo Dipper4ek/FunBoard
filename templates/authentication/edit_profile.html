@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Редагування профілю{% endblock %}
+{% load custom_filters %}
+{% block content %}
+<div class="container">
+    <h2 class="text-center my-4">Редагування профілю</h2>
+
+    <form method="post" class="p-4 border rounded bg-light shadow-sm">
+        {% csrf_token %}
+        <!-- Виведення помилок -->
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Помилка!</strong> Перевірте дані та спробуйте ще раз.
+                <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Поля форми -->
+        <div class="mb-3">
+            <label for="username" class="form-label">Ім'я користувача</label>
+            {{ form.username|add_class:"form-control" }}
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            {{ form.email|add_class:"form-control" }}
+        </div>
+
+        <div class="mb-3">
+            <label for="first_name" class="form-label">Ім'я</label>
+            {{ form.first_name|add_class:"form-control" }}
+        </div>
+
+        <div class="mb-3">
+            <label for="last_name" class="form-label">Прізвище</label>
+            {{ form.last_name|add_class:"form-control" }}
+        </div>
+
+        <!-- Кнопка для збереження -->
+        <button type="submit" class="btn btn-primary w-100">Зберегти</button>
+    </form>
+
+    <!-- Повернення до профілю -->
+    <div class="text-center mt-3">
+        <a href="{% url 'profile' %}" class="btn btn-secondary">Назад до профілю</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Реєстрація{% endblock %}
+
+{% load custom_filters %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center my-4">Реєстрація</h2>
+    <form method="post" class="p-4 border rounded bg-light shadow-sm">
+        {% csrf_token %}
+        <!-- Виведення помилок форми -->
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Помилка!</strong> Перевірте дані та спробуйте ще раз.
+                <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Поля форми -->
+        <div class="mb-3">
+            <label for="username" class="form-label">Ім'я користувача</label>
+            {{ form.username|add_class:"form-control" }}
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            {{ form.email|add_class:"form-control" }}
+        </div>
+
+        <div class="mb-3">
+            <label for="password1" class="form-label">Пароль</label>
+            {{ form.password1|add_class:"form-control" }}
+        </div>
+
+        <div class="mb-3">
+            <label for="password2" class="form-label">Підтвердження пароля</label>
+            {{ form.password2|add_class:"form-control" }}
+        </div>
+
+        <div class="mb-3">
+            <label for="role" class="form-label">Роль</label>
+            {{ form.role|add_class:"form-select" }}
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Зареєструватись</button>
+    </form>
+    <p class="text-center mt-3">
+        Вже є обліковий запис? <a href="{% url 'login' %}">Увійти</a>
+    </p>
+</div>
+{% endblock %}
