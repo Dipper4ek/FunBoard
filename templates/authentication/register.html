@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Реєстрація{% endblock %}
+{% block title %}Registration{% endblock %}
 
 {% load custom_filters %}
 
 {% block content %}
 <div class="container">
-    <h2 class="text-center my-4">Реєстрація</h2>
+    <h2 class="text-center my-4">Registration</h2>
     <form method="post" class="p-4 border rounded bg-light shadow-sm">
         {% csrf_token %}
-        <!-- Виведення помилок форми -->
+        <!-- Display form errors -->
         {% if form.errors %}
             <div class="alert alert-danger">
-                <strong>Помилка!</strong> Перевірте дані та спробуйте ще раз.
+                <strong>Error!</strong> Please check your data and try again.
                 <ul>
                     {% for field in form %}
                         {% for error in field.errors %}
@@ -23,9 +23,9 @@
             </div>
         {% endif %}
 
-        <!-- Поля форми -->
+        <!-- Form fields -->
         <div class="mb-3">
-            <label for="username" class="form-label">Ім'я користувача</label>
+            <label for="username" class="form-label">Username</label>
             {{ form.username|add_class:"form-control" }}
         </div>
 
@@ -35,24 +35,24 @@
         </div>
 
         <div class="mb-3">
-            <label for="password1" class="form-label">Пароль</label>
+            <label for="password1" class="form-label">Password</label>
             {{ form.password1|add_class:"form-control" }}
         </div>
 
         <div class="mb-3">
-            <label for="password2" class="form-label">Підтвердження пароля</label>
+            <label for="password2" class="form-label">Confirm Password</label>
             {{ form.password2|add_class:"form-control" }}
         </div>
 
         <div class="mb-3">
-            <label for="role" class="form-label">Роль</label>
+            <label for="role" class="form-label">Role</label>
             {{ form.role|add_class:"form-select" }}
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">Зареєструватись</button>
+        <button type="submit" class="btn btn-primary w-100">Register</button>
     </form>
     <p class="text-center mt-3">
-        Вже є обліковий запис? <a href="{% url 'login' %}">Увійти</a>
+        Already have an account? <a href="{% url 'login' %}">Login</a>
     </p>
 </div>
 {% endblock %}

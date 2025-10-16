@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}FunBoard{% endblock %}
+{% load custom_filters %}
+
+{% block content %}
+<h1>Лобі гри</h1>
+<a href="{% url 'create_room' %}">Створити кімнату</a>
+<br>
+<a href="{% url 'join_room' %}">Приєднатися до кімнати</a>
+{% endblock %}

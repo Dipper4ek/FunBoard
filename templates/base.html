@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}FunBoard{% endblock %}</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     {% load static %}
     {% load custom_filters %}
@@ -13,48 +11,47 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">FunBoard</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'profile' %}">Профіль</a>
-                        </li>
-                       <form method="post" action="{% url 'logout' %}" class="d-inline">
+    <nav class="navbar">
+    <div class="container">
+        <a class="navbar-brand" href="/">FunBoard</a>
+        <div class="navbar-menu">
+            <ul class="navbar-nav right-nav">
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'profile' %}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <form method="post" action="{% url 'logout' %}" class="inline-form">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-link nav-link" style="text-decoration: none;">Вийти</button>
+                            <button type="submit" class="nav-link-btn">Exit</button>
                         </form>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Вхід</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'register' %}">Реєстрація</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Sign in</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'register' %}">Registration</a>
+                    </li>
+                {% endif %}
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <!-- Main Content -->
-    <div class="container mt-4">
+    <div class="main-container">
         {% block content %}
-        <!-- Вміст сторінки -->
+        <!-- Page content -->
         {% endblock %}
     </div>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3 mt-4">
-        <p>&copy; 2025 Портал Групи. Усі права захищені.</p>
+    <footer class="footer">
+        <p>&copy; nothing</p>
     </footer>
 
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Optional JS -->
+    <script src="{% static 'js/main.js' %}"></script>
 </body>
 </html>
