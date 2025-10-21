@@ -1,11 +1,15 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from .models import GameRoom, Player, Message
+from django.apps import apps
+GameRoom = apps.get_model("Game", "GameRoom")
+Player = apps.get_model("Game", "Player")
+Message = apps.get_model("Game", "Message")
 
 from asgiref.sync import sync_to_async, database_sync_to_async
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        from .models import GameRoom, Player, Message
         self.room_code = self.scope['url_route']['kwargs']['room_code']
         self.room_group_name = f"room_{self.room_code}"
 
