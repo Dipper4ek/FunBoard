@@ -1,4 +1,4 @@
-# game/consumers.py
+
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.exceptions import DenyConnection
