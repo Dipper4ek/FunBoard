@@ -1,10 +1,5 @@
-{% extends 'base.html' %}
+<h2>Кімната {{ room.code }}</h2>
 
-{% block title %}FunBoard{% endblock %}
-{% load custom_filters %}
-
-{% block content %}
-<h1>Кімната {{ room.code }}</h1>
 <h3>Гравці:</h3>
 <ul id="players-list">
     {% for player in players %}
@@ -12,27 +7,40 @@
     {% endfor %}
 </ul>
 
+<h3>Чат:</h3>
+<div id="chat-box" style="border:1px solid #ccc; height:200px; overflow-y:auto;"></div>
+<input type="text" id="chat-input" placeholder="Написати повідомлення">
+<button id="send-btn">Відправити</button>
+
 <script>
 const roomCode = "{{ room.code }}";
+const playerName = "{{ player_name }}";
 const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-const socket = new WebSocket(
-    `${protocol}://${window.location.host}/ws/room/${roomCode}/`
-);
+const socket = new WebSocket(`${protocol}://${window.location.host}/ws/room/${roomCode}/`);
 
 socket.onmessage = function(e) {
     const data = JSON.parse(e.data);
-    if (data.action === 'update_players') {
-        // Перезавантажуємо список гравців (через простий AJAX-запит)
-        fetch(window.location.href)
-            .then(res => res.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                document.getElementById('players-list').innerHTML =
-                    doc.getElementById('players-list').innerHTML;
-            });
+    if(data.action === "chat_history") {
+        data.messages.forEach(msg => addChatMessage(msg.player__name, msg.text));
+    } else if(data.action === "new_message") {
+        addChatMessage(data.player, data.text);
     }
 };
-</script>
 
-{% endblock %}
+function addChatMessage(player, text) {
+    const chatBox = document.getElementById("chat-box");
+    chatBox.innerHTML += `<b>${player}:</b> ${text}<br>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+document.getElementById("send-btn").onclick = () => {
+    const input = document.getElementById("chat-input");
+    if(input.value.trim() === "") return;
+    socket.send(JSON.stringify({
+        action: "send_message",
+        player: playerName,
+        text: input.value
+    }));
+    input.value = "";
+};
+</script>

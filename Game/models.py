@@ -20,3 +20,12 @@ class Player(models.Model):
 
     def __str__(self):
         return self.name
+
+class Message(models.Model):
+    room = models.ForeignKey(GameRoom, on_delete=models.CASCADE, related_name='messages')
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.player.name}: {self.text[:20]}"
