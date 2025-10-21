@@ -150,5 +150,9 @@ ALLOWED_HOSTS = ['*']  # або ['твій_домен.onrender.com', 'localhost'
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Для безпечної передачі cookie:
-CSRF_TRUSTED_ORIGINS = ['https://твій_домен.onrender.com']
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://funboard.onrender.com",  # заміни на свій домен
+]
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
