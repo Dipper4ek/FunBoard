@@ -6,8 +6,11 @@ def home(request):
     return render(request, 'Game/home.html')
 
 def create_room(request):
+    name = request.POST.get("name", "Хост")
     room = GameRoom.objects.create()
+    Player.objects.create(room=room, name=name)
     return redirect('room', room_code=room.code)
+
 
 def join_room(request):
     if request.method == 'POST':
@@ -24,4 +27,17 @@ def join_room(request):
 def room_view(request, room_code):
     room = get_object_or_404(GameRoom, code=room_code)
     players = room.players.all()
-    return render(request, 'Game/room.html', {'room': room, 'players': players})
+
+    # Визначаємо поточного гравця
+    if request.GET.get("name"):
+        player_name = request.GET.get("name")
+    elif players.exists():
+        player_name = players.first().name  # хост або перший гравець
+    else:
+        player_name = "Гість"
+
+    return render(request, 'Game/room.html', {
+        'room': room,
+        'players': players,
+        'player_name': player_name
+    })
