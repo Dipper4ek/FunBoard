@@ -1,57 +1,157 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}FunBoard{% endblock %}</title>
-    <!-- Custom CSS -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FunBoard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     {% load static %}
     {% load custom_filters %}
-    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+    <style>
+    .site-header .container {
+      background-color: rgb(0, 0, 0);
+      display: flex;
+      justify-content: space-between; /* логотип ліворуч, меню праворуч */
+      align-items: center;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 15px 20px;
+      box-sizing: border-box;
+    }
+
+    .site-header .logo {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: white;
+      text-decoration: none;
+    }
+
+    .site-nav ul {
+      display: flex;
+      list-style: none;
+      gap: 1rem;
+      margin: 0;
+      padding: 0;
+    }
+
+    .site-nav ul li a {
+      color: white;
+      text-decoration: none;
+      font-size: 1rem;
+      padding: 8px 16px;
+      border-radius: 25px;         /* овальні кнопки */
+      transition: all 0.3s ease;
+    }
+
+    .site-nav ul li a:hover {
+      background-color: #DA70D6;
+      color: white;
+      border-color: #1abc9c;
+    }
+
+    /* Кнопка виходу */
+    .logout-button {
+      background: none;
+      border: 2px solid white;
+      border-radius: 25px;
+      padding: 8px 16px;
+      font: inherit;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .logout-button:hover {
+      background-color: #e74c3c;
+      border-color: #e74c3c;
+      color: white;
+    }
+
+    /* Контент не ховається під шапкою */
+    main.container {
+      padding-top: 70px;
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+      box-sizing: border-box;
+    }
+
+    /* Фонове зображення */
+    body {
+      background-image: url("{% static 'images/background.jpg' %}");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      box-sizing: border-box;
+    }
+
+    /* Адаптивність для мобільних */
+    @media (max-width: 768px) {
+      .site-header {
+        height: auto;
+        padding: 10px;
+
+      }
+
+      .site-nav ul {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+        width: 100%;
+      }
+
+      .site-nav ul li a {
+        font-size: 0.95rem;
+      }
+
+      main.container {
+        padding-top: 100px;
+      }
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 15px;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid white;
+    }
+
+    .username {
+        color: white;
+        font-weight: bold;
+    }
+    </style>
 </head>
+
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
+<header class="site-header">
     <div class="container">
-        <a class="navbar-brand" href="/">FunBoard</a>
-        <div class="navbar-menu">
-            <ul class="navbar-nav right-nav">
-                {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'profile' %}">Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <form method="post" action="{% url 'logout' %}" class="inline-form">
-                            {% csrf_token %}
-                            <button type="submit" class="nav-link-btn">Exit</button>
-                        </form>
-                    </li>
-                {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Sign in</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'register' %}">Registration</a>
-                    </li>
-                {% endif %}
+        <a href="/" class="logo">FunBoard</a>
+        <nav class="site-nav">
+            <ul>
+                <li><a href="{% url 'login' %}">Login</a></li>
+                <li><a href="{% url 'register' %}">Register</a></li>
             </ul>
-        </div>
+        </nav>
     </div>
-</nav>
+</header>
 
-    <!-- Main Content -->
-    <div class="main-container">
-        {% block content %}
-        <!-- Page content -->
-        {% endblock %}
-    </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <p>&copy; nothing</p>
-    </footer>
-
-    <!-- Optional JS -->
-    <script src="{% static 'js/main.js' %}"></script>
+<main class="container">
+    {% block content %}
+    {% endblock %}
+</main>
 </body>
 </html>
