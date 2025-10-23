@@ -3,7 +3,7 @@ import string, random
 from django.db import models
 
 def generate_room_code():
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return ''.join(random.choices(string.digits, k=4))
 
 class GameRoom(models.Model):
     code = models.CharField(max_length=6, default=generate_room_code, unique=True)

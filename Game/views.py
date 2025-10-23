@@ -7,7 +7,12 @@ def home(request):
 
 def create_room(request):
     room = GameRoom.objects.create()
-    return redirect('room', room_code=room.code)
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        Player.objects.create(room=room, name=name)
+        return redirect('room', room_code=room.code)
+    return render(request, 'Game/create_room.html')
+
 
 def join_room(request):
     if request.method == 'POST':
@@ -18,7 +23,7 @@ def join_room(request):
             Player.objects.create(room=room, name=name)
             return redirect('room', room_code=room.code)
         else:
-            return render(request, 'game/join.html', {'error': 'Кімната заповнена!'})
+            return render(request, 'Game/join.html', {'error': 'Кімната заповнена!'})
     return render(request, 'Game/join.html')
 
 def room_view(request, room_code):
