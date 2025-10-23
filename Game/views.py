@@ -35,26 +35,25 @@ def room_view(request, room_code):
     players = room.players.all()
     messages = room.messages.all().order_by('timestamp')
 
+    if request.GET.get('ajax') == 'players':
+        data = {"players": [{"name": p.name} for p in players]}
+        return JsonResponse(data)
+
+    if request.GET.get('ajax') == 'messages':
+        data = {"messages": [{"player": m.player.name, "content": m.content, "timestamp": m.timestamp.strftime('%H:%M:%S')}
+                         for m in messages]}
+        return JsonResponse(data)
+
     if request.method == "POST":
         player = Player.objects.filter(name=request.user.username, room=room).first()
         if not player:
             player = Player.objects.create(name=request.user.username, room=room)
         Message.objects.create(room=room, player=player, content=request.POST.get('content'))
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # Для AJAX повертаємо JSON
+            return JsonResponse({'status': 'ok', 'player': player.name, 'content': request.POST.get('content')})
+
         return redirect('room_chat', code=room_code)
     return render(request, 'Game/room.html', {'room': room, 'players': players})
 
-
-
-
-def messages_api(request, code):
-    room = get_object_or_404(GameRoom, code=code)
-    messages = room.messages.all().order_by('timestamp')
-
-    data = []
-    for msg in messages:
-        data.append({
-            'player': msg.player.name,
-            'content': msg.content,
-            'timestamp': msg.timestamp.strftime('%H:%M:%S'),
-        })
-    return JsonResponse({'messages': data})
