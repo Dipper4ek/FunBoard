@@ -10,6 +10,7 @@ class GameRoom(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     max_players = models.IntegerField(default=5)
 
+
     def __str__(self):
         return self.code
 
@@ -20,3 +21,12 @@ class Player(models.Model):
 
     def __str__(self):
         return self.name
+
+class Message(models.Model):
+    room = models.ForeignKey(GameRoom, on_delete=models.CASCADE, related_name='messages')
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.player.name}: {self.content[:20]}"
