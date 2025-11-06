@@ -26,6 +26,8 @@ SECRET_KEY = 'django-insecure-ory0cw-ct1^4f*bkl(cuing3-(^xha=1m9k^)5v+4-oj907c-7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'funboard.onrender.com']
+
 
 
 # Application definition
@@ -151,4 +153,3 @@ CSRF_TRUSTED_ORIGINS = [
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 
-ALLOWED_HOSTS = ['funboard.onrender.com']
