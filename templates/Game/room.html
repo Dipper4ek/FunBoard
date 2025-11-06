@@ -1,14 +1,59 @@
 {% extends 'base.html' %}
 
 {% block title %}FunBoard{% endblock %}
-{% load custom_filters %}
 
 {% block content %}
 <head>
     <meta charset="UTF-8">
     <title>Чат кімнати {{ room.code }}</title>
+    <style>
+        /* --- Стилі для таблиці гри --- */
+        .game_board {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        .game_board td {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #333;
+            text-align: center;
+            vertical-align: middle;
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+
+        /* --- Стилі для чату --- */
+        #chat-box {
+            border: 1px solid #ccc;
+            height: 200px;
+            overflow-y: scroll;
+            padding: 5px;
+            background-color: #fafafa;
+            margin-bottom: 10px;
+        }
+
+        #message-form textarea {
+            width: 100%;
+            height: 50px;
+            margin-bottom: 5px;
+        }
+        #message-form button {
+            padding: 5px 10px;
+        }
+
+        /* --- Стилі для списку гравців --- */
+        #players-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        #players-list li {
+            padding: 2px 0;
+        }
+    </style>
 </head>
+
 <h1>Кімната {{ room.code }}</h1>
+
 <h3>Гравці:</h3>
 <ul id="players-list">
     {% for player in players %}
@@ -30,9 +75,10 @@
 
 <form method="POST" id="message-form">
     {% csrf_token %}
-<textarea name="content" id="messageInput" placeholder="Введіть повідомлення..." required></textarea>
-<button type="submit">Надіслати</button>
+    <textarea name="content" id="messageInput" placeholder="Введіть повідомлення..." required></textarea>
+    <button type="submit">Надіслати</button>
 </form>
+<a href="{% url 'game_board' room.code %}" class="btn">Розпочати гру</a>
 
 
 <script>
@@ -77,19 +123,16 @@ form.addEventListener('submit', e => {
         method: 'POST',
         body: formData,
         headers: {
-            'X-Requested-With': 'XMLHttpRequest' // щоб сервер знав, що це AJAX
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
     .then(res => res.json())
     .then(data => {
         if (data.status === 'ok') {
-            textarea.value = '';  // <- очищення textarea
-            updateRoom();         // <- оновлення чату та гравців
+            textarea.value = '';
+            updateRoom();
         }
     });
 });
 </script>
-
-
-
 {% endblock %}

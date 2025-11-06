@@ -21,6 +21,13 @@
       box-sizing: border-box;
     }
 
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000; /* щоб шапка була поверх усього контенту */
+      background-color: black; /* обов’язково вкажи фон, щоб не просвічувалось */
+    }
+
     .site-header .logo {
       font-size: 1.6rem;
       font-weight: bold;

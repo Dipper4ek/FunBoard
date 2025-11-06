@@ -30,3 +30,4 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.player.name}: {self.content[:20]}"
+
