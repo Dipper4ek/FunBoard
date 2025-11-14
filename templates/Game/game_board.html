@@ -189,13 +189,17 @@
 
     <div class="nm_ps" style="top: 30px; left: 920px;"><a>30</a></div>
 
-    <div id="player"></div>
+    {% for p in players %}
+        <div id="player-{{ p.uuid }}" class="player" style="position:absolute; left:0; top:0;">
+            {{ p.name }}
+        </div>
+    {% endfor %}
 </div>
 
 
 <div id="dice-wrapper">
   <img id="dice" src="{% static 'images/dice1.png' %}" alt="Dice">
-  <button id="rollButton" onclick="rollDice()">🎲</button>
+  <button id="rollButton">🎲</button>
 </div>
 
 
@@ -212,17 +216,49 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // --- 1. Визначення критичних змінних з контексту Django ---
+    // УВАГА: Замініть "..." на ваші змінні, які приходять з бекенду
+    const roomCode = "{{ room.code }}";
+    const currentPlayerUuid = "{{ player.uuid }}"; // ID фішки, якою керує цей користувач
+
+    // Функція для отримання CSRF токена (стандартний підхід для Django)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // --- 2. Отримання DOM-елементів ---
     const dice = document.getElementById("dice");
     const rollButton = document.getElementById("rollButton");
-    const player = document.getElementById("player");
+    // Використовуємо унікальний ID фішки поточного гравця
+    const playerToken = document.getElementById(`player-${currentPlayerUuid}`);
     const chatBox = document.getElementById('chat-box');
     const playersList = document.getElementById('players-list');
     const form = document.getElementById('message-form');
+    // Виправлення: отримати елемент за ID
     const textarea = document.getElementById('messageInput');
 
-    if (!dice || !rollButton || !player) return;
+    rollButton.addEventListener('click', rollDice);
 
-    // Масив позицій фішки
+    // Якщо критичні елементи не знайдені, припиняємо виконання
+    if (!dice || !rollButton ) {
+         console.error("Помилка ініціалізації: не знайдено один або кілька критичних елементів DOM (кубик, кнопка, фішка гравця, форма чату або textarea).");
+         return;
+    }
+
+    // --- 3. Позиції на дошці ---
+    // Масив позицій фішки.
     const positions = [
         {x:20,y:430},{x:120,y:430},{x:220,y:430},{x:320,y:430},{x:420,y:430},
         {x:520,y:430},{x:620,y:430},{x:720,y:430},{x:820,y:430},{x:820,y:330},
@@ -235,36 +271,105 @@ document.addEventListener('DOMContentLoaded', () => {
     let positionIndex = 0;
     let isMoving = false;
 
-    // Функція руху фішки
-    function movePlayer(steps) {
-        isMoving = true;
-        let targetIndex = positionIndex + steps;
-        if (targetIndex >= positions.length) targetIndex = positions.length - 1;
+    // --- 4. Функція оновлення стану з бази (ВКЛЮЧАЄ ВСІХ ГРАВЦІВ) ---
+    async function fetchBoardState() {
+        try {
+            const res = await fetch(`/game/${roomCode}/state/`);
+            if (!res.ok) throw new Error(`Помилка отримання стану: ${res.status}`);
+            const data = await res.json();
 
-        const moveStep = () => {
-            if (positionIndex >= targetIndex) {
-                isMoving = false;
-                return;
-            }
-            positionIndex++;
-            const pos = positions[positionIndex];
-            player.style.left = `${pos.x}px`;
-            player.style.top = `${pos.y}px`;
+            // Оновлюємо фішки ВСІХ гравців
+            data.players_state.forEach(p => {
+                const pEl = document.getElementById(`player-${p.uuid}`);
+                if (pEl) {
+                    const pos = positions[p.position];
+                    pEl.style.left = `${pos.x}px`;
+                    pEl.style.top = `${pos.y}px`;
+                }
 
-            setTimeout(moveStep, 600);
-        };
+                // Якщо це поточний гравець, оновлюємо його позицію для логіки кидка
+                if (p.uuid === currentPlayerUuid) {
+                     positionIndex = p.position; // Оновлюємо внутрішню змінну
+                     // Оновлюємо відображення кубика (лише для поточного гравця, якщо це його хід)
+                     dice.src = `/static/images/dice${p.dice_value}.png`;
+                }
+            });
 
-        moveStep();
+
+        } catch (err) {
+            console.error("Помилка під час отримання стану дошки:", err);
+        }
     }
 
-    // Функція кидка кубика
-    function rollDice() {
+    // --- 5. Функція руху фішки (Покрокова анімація) ---
+    async function movePlayer(steps) {
+        if (isMoving) return;
+        isMoving = true;
+        rollButton.disabled = true; // Блокуємо кнопку під час руху
+
+        let targetIndex = positionIndex + steps;
+        // Перевірка на вихід за межі дошки
+        if (targetIndex >= positions.length) {
+            targetIndex = positions.length - 1;
+            console.log("Гра завершена!");
+        }
+
+        const moveStep = async () => {
+            if (positionIndex >= targetIndex) {
+                isMoving = false;
+                rollButton.disabled = false; // Розблоковуємо кнопку
+
+                // Після завершення руху оновлюємо позицію в базі
+                await fetch(`/game/${roomCode}/update_position/`, {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json','X-CSRFToken': csrftoken},
+                    body: JSON.stringify({
+                        player_uuid: currentPlayerUuid, // Передаємо ID гравця
+                        position: positionIndex
+                    })
+                });
+                return;
+            }
+        const moveStep = async () => {
+            if (positionIndex >= targetIndex) {
+                isMoving = false;
+                rollButton.disabled = false; // Розблоковуємо кнопку
+
+
+                await fetch(`/room/${roomCode}/`, { // Змінено URL на URL кімнати
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json','X-CSRFToken': csrftoken},
+                    body: JSON.stringify({
+                        action: 'update_position', // <-- Ключове поле для ідентифікації дії
+                        player_uuid: currentPlayerUuid,
+                        position: positionIndex // Позиція, на якій гравець зупинився
+                    })
+                });
+                return;
+            }
+    // ... (логіка продовження руху) ...
+};
+
+            positionIndex++; // Збільшуємо позицію
+            const pos = positions[positionIndex];
+            playerToken.style.left = `${pos.x}px`;
+            playerToken.style.top = `${pos.y}px`;
+
+            setTimeout(moveStep, 600); // Інтервал між кроками
+        };
+
+        moveStep(); // Запускаємо рух
+    }
+
+    // --- 6. Функція кидка кубика ---
+    async function rollDice() {
         if (isMoving) return;
 
         const finalResult = Math.floor(Math.random() * 6) + 1;
         let count = 0;
         let intervalTime = 50;
         const maxSpins = 20;
+        rollButton.disabled = true; // Блокуємо кнопку на час анімації
 
         const spinDice = () => {
             const randomFace = Math.floor(Math.random() * 6) + 1;
@@ -276,9 +381,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 intervalTime += 15;
                 setTimeout(spinDice, intervalTime);
             } else {
-                setTimeout(() => {
+                setTimeout(async () => {
+                    // Фінальний результат
                     dice.src = `/static/images/dice${finalResult}.png`;
                     dice.style.transform = "rotate(0deg)";
+
+                    const url = `/game/${roomCode}/${currentPlayerUuid}/`; // <-- Приклад URL, якщо view використовує player_uuid
+
+                    await fetch(url, { // ...
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json','X-CSRFToken': csrftoken},
+                        body: JSON.stringify({
+                            dice: finalResult
+                        })
+                    });
+
+                    // Починаємо рух
                     movePlayer(finalResult);
                 }, intervalTime);
             }
@@ -287,63 +405,78 @@ document.addEventListener('DOMContentLoaded', () => {
         spinDice();
     }
 
-    // Прив’язка кнопки
-    rollButton.addEventListener('click', rollDice);
 
-    // Функція оновлення гравців і чату через AJAX
-    function updateRoom() {
-        // Оновлення гравців
-        const playersUrl = new URL(window.location.href);
-        playersUrl.searchParams.set('ajax','players');
-        fetch(playersUrl)
-            .then(res => res.ok ? res.json() : Promise.reject(res.status))
-            .then(data => {
-                if (playersList) playersList.innerHTML = data.players.map(p => `<li>${p.name}</li>`).join('');
-            })
-            .catch(err => console.log('Помилка отримання гравців:', err));
 
-        // Оновлення чату
-        const messagesUrl = new URL(window.location.href);
-        messagesUrl.searchParams.set('ajax','messages');
-        fetch(messagesUrl)
-            .then(res => res.ok ? res.json() : Promise.reject(res.status))
-            .then(data => {
-                if (chatBox) {
-                    chatBox.innerHTML = data.messages.map(m =>
-                        `<div class="message">
-                            <strong>${m.player}</strong>: ${m.content}
-                            <div style="font-size:0.8em;color:gray">${m.timestamp}</div>
-                        </div>`
-                    ).join('');
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }
-            })
-            .catch(err => console.log('Помилка отримання повідомлень:', err));
+    // --- 7. Функція оновлення гравців і чату ---
+    async function updateRoomInfo() {
+        try {
+            // Оновлення списку гравців
+            const playersRes = await fetch(`${window.location.href}?ajax=players`);
+            const playersData = await playersRes.json();
+            playersList.innerHTML = playersData.players.map(p => `<li>${p.name}</li>`).join('');
+
+            // Оновлення чату
+            const messagesRes = await fetch(`${window.location.href}?ajax=messages`);
+            const messagesData = await messagesRes.json();
+
+            // Перевірка, чи чат був на самому низу перед оновленням
+            const isScrolledToBottom = chatBox.scrollHeight - chatBox.clientHeight <= chatBox.scrollTop + 1;
+
+            chatBox.innerHTML = messagesData.messages.map(m =>
+                `<div class="message">
+                    <strong>${m.player}</strong>: ${m.content}
+                    <div style="font-size:0.8em;color:gray">${m.timestamp}</div>
+                </div>`).join('');
+
+            // Прокручуємо вниз, лише якщо чат був прокручений вниз до оновлення
+            if (isScrolledToBottom) {
+                 chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        } catch(err) {
+            console.error("Помилка під час оновлення інформації кімнати:", err);
+        }
     }
 
-    setInterval(updateRoom, 3000);
+    // --- 8. Відправка повідомлень ---
+    form.addEventListener('submit', e => {
+        e.preventDefault();
 
-    // Відправка повідомлень
-    if (form && textarea) {
-        form.addEventListener('submit', e => {
-            e.preventDefault();
-            const formData = new FormData(form);
-            fetch(window.location.href, {
-                method:'POST',
-                body:formData,
-                headers:{'X-Requested-With':'XMLHttpRequest'}
-            })
-            .then(res => res.ok ? res.json() : Promise.reject(res.status))
-            .then(data => {
-                if (data.status === 'ok') {
-                    textarea.value = '';
-                    updateRoom();
-                }
-            })
-            .catch(err => console.log('Помилка при відправці повідомлення:', err));
-        });
-    }
+        // Виправлення: використовуємо formData для передачі даних
+        const formData = new FormData(form);
+
+        // Додаємо CSRF токен до заголовка
+        fetch(window.location.href, {
+            method:'POST',
+            body:formData,
+            headers:{'X-Requested-With':'XMLHttpRequest', 'X-CSRFToken': csrftoken} // Додано CSRF
+        }).then(res => {
+            if (res.ok) return res.json();
+            throw new Error(`Помилка відправки повідомлення: ${res.status}`);
+        })
+        .then(data => {
+            if(data.status==='ok'){
+                textarea.value=''; // Очищаємо поле
+                updateRoomInfo(); // Оновлюємо чат
+            } else {
+                console.error("Помилка від бекенду:", data.status);
+            }
+        })
+        .catch(err=>console.error(err));
+    });
+
+    // --- 9. Ініціалізація та Інтервали ---
+
+    // Оновлення стану дошки (всіх фішок) кожні 2 секунди
+    setInterval(fetchBoardState, 2000);
+
+    // Оновлення гравців та чату кожні 3 секунди
+    setInterval(updateRoomInfo, 3000);
+
+    // Перше завантаження стану
+    fetchBoardState();
+    updateRoomInfo();
 });
+
 </script>
 
 {% endblock %}

@@ -7,5 +7,6 @@ urlpatterns = [
     path('create/', views.create_room, name='create_room'),
     path('join/', views.join_room, name='join_room'),
     path('room/<str:room_code>/', views.room_view, name='room'),
-    path('game/<str:room_code>/', views.game_board, name='game_board'),
+    path('game/<int:room_code>/<uuid:player_uuid>/', views.game_board, name='game_board')
+
 ]

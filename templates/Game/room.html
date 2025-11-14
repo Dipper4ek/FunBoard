@@ -78,7 +78,8 @@
     <textarea name="content" id="messageInput" placeholder="Введіть повідомлення..." required></textarea>
     <button type="submit">Надіслати</button>
 </form>
-<a href="{% url 'game_board' room.code %}" class="btn">Розпочати гру</a>
+<a href="{% url 'game_board' room.code player_uuid %}" class="btn">Розпочати гру</a>
+
 
 
 <script>
@@ -134,5 +135,6 @@ form.addEventListener('submit', e => {
         }
     });
 });
+
 </script>
 {% endblock %}
